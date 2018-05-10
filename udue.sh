@@ -1,12 +1,10 @@
-# Gather fingerprints, push SSH key, enable NTP, and enable UNMS.
-
+#Gather fingerprints, push SSH key, enable NTP, and enable UNMS.
 #You can change i if you want a different starting point for your IPs.
-i=2
+i=56
 #Change network here to suit your needs. Will run on a /24 (or less if you change the number in the 'while' line).
 network=10.20.1.
 username=$(cat user.txt)
 unmskey=$(cat unms.key)
-
 #Set timeout function for 20 seconds per IP.
 Timeout=20
 timeout_mon() {
@@ -18,7 +16,7 @@ timeout_mon() {
    then
     $1
     i=$(($i+1))
-    kill "$Timeout_monitor_pid"
+    killall "$Timeout_monitor_pid" &> /dev/null
     continue
   fi
   }
@@ -43,15 +41,17 @@ timeout_mon() {
   }
  #Function to copy SSH key.
  cpsshkey() {
+ echo "Copying SSH key..."
   sshpass -f pass.txt ssh-copy-id $username@$ipaddress 2>&1 > /dev/null
-  echo "$ipaddress received SSH key."
   if ! [ $? -eq 0 ];
    then
     echo "$ipaddress failed to receive SSH key properly."
     echo "$ipaddress failed to receive SSH key properly." >> fail.log
     i=$(($i+1))
-    kill "$Timeout_monitor_pid" 2>&1 > /dev/null
+    killall "$Timeout_monitor_pid" &> /dev/null
     continue
+   else
+    echo "$ipaddress received SSH key."
   fi
   }
  #Function to enable NTP status
@@ -138,5 +138,5 @@ while [ "$i" -le "254" ]
  echo "$ipaddress completed successfully." >> win.log
  echo "$ipaddress completed successfully."
  i=$(($i+1))
- kill "$Timeout_monitor_pid" 2>&1 > /dev/null
+ killall "$Timeout_monitor_pid" &> /dev/null
 done
